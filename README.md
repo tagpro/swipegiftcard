@@ -1,38 +1,50 @@
-# sv
+# SwipeGiftCard
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SwipeGiftCard is a Progressive Web App (PWA) designed to help users explore and manage gift cards from various providers (TCN, Ultimate). It features an offline-first architecture, data synchronization, and a modern, responsive UI.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Offline-First**: Built with TanStack DB and LocalStorage to work without an internet connection.
+- **Data Sync**: Synchronize gift card data from the server to your local device.
+- **Multi-Source Support**: Aggregates cards from TCN and Ultimate, handling brand normalization.
+- **Modern UI**: Clean, grid-based layout with Dark Mode support (Tailwind CSS v4).
+- **Discover Mode**: Tinder-like swipe interface for discovering new brands.
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Setup Instructions
 
-# create a new project in my-app
-npx sv create my-app
+Follow these steps to set up the project locally.
+
+### 1. Install Dependencies
+```bash
+npm install
 ```
 
-## Developing
+### 2. Setup Local Database
+This command initializes the local SQLite database, pushes the schema, and loads the initial data from `data/tcn.json`.
+```bash
+npm run db:setup
+```
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+### 3. Start Development Server
+```bash
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
+The app will be available at `http://localhost:5173`.
 
-## Building
+## Code Structure
 
-To create a production version of your app:
+- **`src/routes/`**: Application pages and API endpoints.
+  - **`api/sync/`**: Endpoint for serving data to the client.
+  - **`brand/[brandName]/`**: Dynamic route for brand details.
+  - **`cards/`**: List of all gift cards.
+  - **`sync/`**: Client-side data synchronization page.
+- **`src/lib/`**: Shared utilities and components.
+  - **`client-db.ts`**: Client-side TanStack DB configuration.
+  - **`db/`**: Server-side Drizzle ORM configuration and schema.
+- **`scripts/`**: Utility scripts.
+  - **`sync-data.ts`**: Script to parse raw data and populate the server-side database.
+- **`data/`**: Raw data files (e.g., `tcn.json`).
 
-```sh
-npm run build
-```
+## Deployment
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+For deployment instructions, including setting up secrets and deploying to Fly.io, please refer to [Deploy.md](./Deploy.md).
