@@ -8,7 +8,6 @@ SwipeGiftCard is a Progressive Web App (PWA) designed to help users explore and 
 - **Data Sync**: Synchronize gift card data from the server to your local device.
 - **Multi-Source Support**: Aggregates cards from TCN and Ultimate, handling brand normalization.
 - **Modern UI**: Clean, grid-based layout with Dark Mode support (Tailwind CSS v4).
-- **Discover Mode**: Tinder-like swipe interface for discovering new brands.
 
 ## Setup Instructions
 

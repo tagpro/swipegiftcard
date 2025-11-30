@@ -52,7 +52,7 @@
 		<span class="text-xs">Brands</span>
 	</a>
 	<a
-		href="/discover"
+		href="/sync"
 		class="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400"
 	>
 		<svg
@@ -66,10 +66,10 @@
 				stroke-linecap="round"
 				stroke-linejoin="round"
 				stroke-width="2"
-				d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+				d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
 			/>
 		</svg>
-		<span class="text-xs">Discover</span>
+		<span class="text-xs">Sync</span>
 	</a>
 	<a
 		href="/cards"
