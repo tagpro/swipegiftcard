@@ -35,7 +35,11 @@ async function syncTCN() {
     for (const brand of tcnBrands) {
         console.log(`Fetching ${brand.name}...`);
         try {
-            const response = await fetch(brand.url);
+            const response = await fetch(brand.url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                }
+            });
             if (!response.ok) {
                 console.error(`Failed to fetch ${brand.name}: ${response.statusText}`);
                 continue;
