@@ -47,4 +47,4 @@ The app will be available at `http://localhost:5173`.
 
 ## Deployment
 
-For deployment instructions, including setting up secrets and deploying to Fly.io, please refer to [Deploy.md](./Deploy.md).
+For deployment instructions, including setting up secrets and deploying to Fly.io, please refer to [DEPLOY.md](./DEPLOY.md).
