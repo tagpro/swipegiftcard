@@ -42,66 +42,76 @@ async function syncTCN() {
     const tcnDataPath = path.join(process.cwd(), 'data', 'tcn.json');
     const tcnBrands: TCNBrand[] = JSON.parse(fs.readFileSync(tcnDataPath, 'utf-8'));
 
-    const results = await Promise.all(tcnBrands.map(async (brand) => {
-        console.time(`Process ${brand.name}`);
-        console.log(`Fetching ${brand.name}...`);
-        try {
-            const response = await fetch(brand.url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                }
-            });
-            if (!response.ok) {
-                throw new Error(`Failed to fetch ${brand.name}: ${response.statusText}`);
-            }
-            const data: TCNResponse = await response.json();
-            const cardName = `${brand.name} (TCN)`; // e.g. "Active (TCN)"
+    // Process in chunks to avoid rate limiting (403 Forbidden)
+    const brandChunks = chunkArray(tcnBrands, 5);
+    const results: boolean[] = [];
 
-            console.log(`[${brand.name}] Inserting card...`);
-            // Ensure card exists
-            await db.insert(cards).values({ name: cardName }).onConflictDoNothing();
-
-            const retailerNames = data.response.brand.map((r) => toTitleCase(r.brand_name));
-            console.log(`[${brand.name}] Found ${retailerNames.length} retailers. Processing...`);
-
-            // Bulk insert brands
-            const uniqueRetailers = Array.from(new Set(retailerNames));
-            const brandChunks = chunkArray(uniqueRetailers, 50);
-            for (const chunk of brandChunks) {
-                await db.insert(brands).values(chunk.map(name => ({ name }))).onConflictDoNothing();
-            }
-
-            // Bulk insert brandCards
-            const brandCardValues = uniqueRetailers.map(retailerName => ({
-                brandName: retailerName,
-                cardName: cardName,
-                source: 'tcn',
-                lastUpdatedAt: new Date(),
-            }));
-
-            const linkChunks = chunkArray(brandCardValues, 50);
-            for (const chunk of linkChunks) {
-                await db.insert(brandCards).values(chunk).onConflictDoUpdate({
-                    target: [brandCards.brandName, brandCards.cardName],
-                    set: { lastUpdatedAt: new Date(), deletedAt: null, source: 'tcn' }
+    for (const chunk of brandChunks) {
+        const chunkResults = await Promise.all(chunk.map(async (brand) => {
+            console.time(`Process ${brand.name}`);
+            console.log(`Fetching ${brand.name}...`);
+            try {
+                const response = await fetch(brand.url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    }
                 });
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${brand.name}: ${response.statusText}`);
+                }
+                const data: TCNResponse = await response.json();
+                const cardName = `${brand.name} (TCN)`; // e.g. "Active (TCN)"
+
+                console.log(`[${brand.name}] Inserting card...`);
+                // Ensure card exists
+                await db.insert(cards).values({ name: cardName }).onConflictDoNothing();
+
+                const retailerNames = data.response.brand.map((r) => toTitleCase(r.brand_name));
+                console.log(`[${brand.name}] Found ${retailerNames.length} retailers. Processing...`);
+
+                // Bulk insert brands
+                const uniqueRetailers = Array.from(new Set(retailerNames));
+                const brandChunks = chunkArray(uniqueRetailers, 50);
+                for (const chunk of brandChunks) {
+                    await db.insert(brands).values(chunk.map(name => ({ name }))).onConflictDoNothing();
+                }
+
+                // Bulk insert brandCards
+                const brandCardValues = uniqueRetailers.map(retailerName => ({
+                    brandName: retailerName,
+                    cardName: cardName,
+                    source: 'tcn',
+                    lastUpdatedAt: new Date(),
+                }));
+
+                const linkChunks = chunkArray(brandCardValues, 50);
+                for (const chunk of linkChunks) {
+                    await db.insert(brandCards).values(chunk).onConflictDoUpdate({
+                        target: [brandCards.brandName, brandCards.cardName],
+                        set: { lastUpdatedAt: new Date(), deletedAt: null, source: 'tcn' }
+                    });
+                }
+
+                console.log(`[${brand.name}] Soft deleting old links...`);
+                await db.update(brandCards)
+                    .set({ deletedAt: new Date() })
+                    .where(
+                        eq(brandCards.cardName, cardName)
+                    );
+
+                console.timeEnd(`Process ${brand.name}`);
+                return true;
+            } catch (error) {
+                console.error(`Error processing ${brand.name}:`, error);
+                console.timeEnd(`Process ${brand.name}`);
+                return false;
             }
+        }));
+        results.push(...chunkResults);
 
-            console.log(`[${brand.name}] Soft deleting old links...`);
-            await db.update(brandCards)
-                .set({ deletedAt: new Date() })
-                .where(
-                    eq(brandCards.cardName, cardName)
-                );
-
-            console.timeEnd(`Process ${brand.name}`);
-            return true;
-        } catch (error) {
-            console.error(`Error processing ${brand.name}:`, error);
-            console.timeEnd(`Process ${brand.name}`);
-            return false;
-        }
-    }));
+        // Add a small delay between chunks
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
     if (results.some(success => !success)) {
         throw new Error('One or more TCN brands failed to sync');
