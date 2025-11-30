@@ -41,8 +41,7 @@ async function syncTCN() {
                 }
             });
             if (!response.ok) {
-                console.error(`Failed to fetch ${brand.name}: ${response.statusText}`);
-                continue;
+                throw new Error(`Failed to fetch ${brand.name}: ${response.statusText}`);
             }
             const data: TCNResponse = await response.json();
             const cardName = `${brand.name} (TCN)`; // e.g. "Active (TCN)"
@@ -301,8 +300,31 @@ async function syncUltimate() {
 }
 
 async function main() {
-    await syncTCN();
-    await syncUltimate();
+    let hasError = false;
+
+    try {
+        await syncTCN();
+    } catch (e) {
+        console.error('Error in syncTCN:', e);
+        hasError = true;
+    }
+
+    try {
+        await syncUltimate();
+    } catch (e) {
+        console.error('Error in syncUltimate:', e);
+        hasError = true;
+    }
+
+    if (hasError) {
+        console.error('Sync completed with errors.');
+        process.exit(1);
+    } else {
+        console.log('Sync completed successfully.');
+    }
 }
 
-main().catch(console.error);
+main().catch((e) => {
+    console.error('Unhandled error in main:', e);
+    process.exit(1);
+});
