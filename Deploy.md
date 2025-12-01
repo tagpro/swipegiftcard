@@ -43,8 +43,30 @@ The application is deployed to Fly.io using the workflow defined in `.github/wor
 
 ## 3. Data Synchronization
 
-Data sync is handled by the workflow in `.github/workflows/sync-data.yml`.
+Data sync is now triggered via an API endpoint (`POST /api/webhooks/provider-data-updates`) secured by a secret key.
 
-- **Schedule**: Runs daily at midnight (UTC).
-- **Manual Trigger**: You can manually trigger this workflow from the **Actions** tab in GitHub.
-- **Secrets**: Requires `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` (same as above).
+### Setup `CRON_SECRET`
+
+1.  **Generate a Secret**:
+    Run this command in your terminal (Linux/Mac) to generate a secure random key:
+    ```bash
+    openssl rand -hex 32
+    ```
+2.  **Set Secret in Fly.io**:
+    ```bash
+    fly secrets set CRON_SECRET=your_generated_secret_here
+    ```
+
+### Triggering Sync
+
+-   **Manual Trigger (API)**:
+    ```bash
+    curl -X POST https://your-app-name.fly.dev/api/webhooks/provider-data-updates \
+      -H "Authorization: Bearer your_generated_secret_here"
+    ```
+-   **Manual Trigger (Console)**:
+    SSH into your Fly app and run the script directly:
+    ```bash
+    fly ssh console
+    npm run start:sync
+    ```

@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"start": "node build",
+		"start:sync": "tsx scripts/sync-data-v2.ts",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -12,7 +13,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"db:push": "drizzle-kit push",
-		"db:sync": "npx tsx scripts/sync-data.ts",
+		"db:sync": "tsx scripts/sync-data-v2.ts",
 		"db:setup": "npm run db:push && npm run db:sync"
 	},
 	"devDependencies": {
@@ -26,8 +27,10 @@
 		"svelte": "^5.43.8",
 		"svelte-check": "^4.3.4",
 		"tailwindcss": "^4.1.17",
+		"tsx": "^4.21.0",
 		"typescript": "^5.9.3",
-		"vite": "^7.2.2"
+		"vite": "^7.2.2",
+		"vitest": "^4.0.14"
 	},
 	"dependencies": {
 		"@libsql/client": "^0.15.15",
