@@ -1,8 +1,6 @@
 name: Sync Data to Turso
 
 on:
-  schedule:
-    - cron: '0 0 * * *' # Run daily at midnight
   workflow_dispatch: # Allow manual trigger
 
 jobs:
