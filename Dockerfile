@@ -41,12 +41,8 @@ FROM base
 COPY --from=build /app/build /app/build
 COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/package.json /app
-
-# Setup sqlite3 on a separate volume
-RUN mkdir -p /data
-VOLUME /data
+COPY --from=build /app/data/tcn.json /app/data/tcn.json
 
 # Start the server by default, this can be overwritten at runtime
-EXPOSE 3000
-ENV DATABASE_URL="file:///data/sqlite.db"
+EXPOSE 5173
 CMD [ "npm", "run", "start" ]

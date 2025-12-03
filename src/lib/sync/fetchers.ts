@@ -21,7 +21,8 @@ function toTitleCase(str: string) {
 
 export async function fetchTCNData(): Promise<SyncData> {
     console.log('Fetching TCN data...');
-    const tcnDataPath = path.join(process.cwd(), 'data', 'tcn.json');
+    const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+    const tcnDataPath = path.join(dataDir, 'tcn.json');
     const tcnBrands: TCNBrand[] = JSON.parse(fs.readFileSync(tcnDataPath, 'utf-8'));
 
     const brands = new Set<string>();
@@ -96,8 +97,17 @@ export async function fetchTCNData(): Promise<SyncData> {
 
 export async function fetchUltimateData(): Promise<SyncData> {
     console.log('Fetching Ultimate data...');
-    const ultimateHtmlPath = path.join(process.cwd(), 'data', 'ultimate', 'all-retailers.html');
-    const html = fs.readFileSync(ultimateHtmlPath, 'utf-8');
+    const response = await fetch('https://www.ultimategiftcards.com.au/all-retailers/', {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch Ultimate data: ${response.statusText}`);
+    }
+
+    const html = await response.text();
     const $ = cheerio.load(html);
 
     const brands = new Set<string>();
