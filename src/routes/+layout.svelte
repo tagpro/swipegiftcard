@@ -2,6 +2,7 @@
 	import "../app.css";
 	import favicon from "$lib/assets/favicon.svg";
 	import { onMount } from "svelte";
+	import { deferredPrompt } from "$lib/stores/pwa";
 
 	let { children } = $props();
 
@@ -15,6 +16,16 @@
 		} else {
 			document.documentElement.classList.remove("dark");
 		}
+
+		// Check if the event was already captured by the script in app.html
+		if ((window as any).deferredInstallPrompt) {
+			deferredPrompt.set((window as any).deferredInstallPrompt);
+		}
+
+		window.addEventListener("beforeinstallprompt", (e) => {
+			e.preventDefault();
+			deferredPrompt.set(e);
+		});
 	});
 </script>
 

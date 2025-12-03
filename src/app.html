@@ -1,15 +1,25 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="theme-color" content="#3b82f6" />
-		<meta name="description" content="Find eligible gift cards for your favorite brands" />
-		<link rel="manifest" href="/manifest.json" />
-		<link rel="apple-touch-icon" href="/icon-192.png" />
-		%sveltekit.head%
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
-	</body>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="theme-color" content="#3b82f6" />
+	<meta name="description" content="Find eligible gift cards for your favorite brands" />
+	<link rel="manifest" href="/manifest.json" />
+	<link rel="apple-touch-icon" href="/icon-192.png" />
+	%sveltekit.head%
+	<script>
+		window.deferredInstallPrompt = null;
+		window.addEventListener('beforeinstallprompt', (e) => {
+			e.preventDefault();
+			window.deferredInstallPrompt = e;
+		});
+	</script>
+</head>
+
+<body data-sveltekit-preload-data="hover">
+	<div style="display: contents">%sveltekit.body%</div>
+</body>
+
 </html>

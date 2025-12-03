@@ -1,6 +1,8 @@
 <script lang="ts">
     import { onMount } from "svelte";
 
+    import { deferredPrompt } from "$lib/stores/pwa";
+
     let isDark = $state(false);
 
     onMount(() => {
@@ -17,6 +19,17 @@
             localStorage.setItem("theme", "light");
         }
     }
+
+    function install() {
+        const promptEvent = $deferredPrompt;
+        if (!promptEvent) return;
+        promptEvent.prompt();
+        promptEvent.userChoice.then((choiceResult: any) => {
+            if (choiceResult.outcome === "accepted") {
+                deferredPrompt.set(null);
+            }
+        });
+    }
 </script>
 
 <div class="p-4 max-w-2xl mx-auto">
@@ -30,5 +43,22 @@
         >
             Switch to {isDark ? "Light" : "Dark"} Mode
         </button>
+    </div>
+
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold mb-2">Install as an App</h2>
+        <button
+            onclick={install}
+            disabled={!$deferredPrompt}
+            class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 hover:shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none"
+        >
+            Install
+        </button>
+        {#if !$deferredPrompt}
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Install button is disabled because the app is already installed
+                or the browser doesn't support installation.
+            </p>
+        {/if}
     </div>
 </div>
