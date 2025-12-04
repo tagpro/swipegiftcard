@@ -6,7 +6,6 @@
 	"display": "standalone",
 	"background_color": "#ffffff",
 	"theme_color": "#3b82f6",
-	"orientation": "any",
 	"icons": [
 		{
 			"src": "/icon-192.png",
@@ -33,5 +32,8 @@
 			"purpose": "maskable"
 		}
 	],
-	"categories": ["shopping", "lifestyle"]
+	"categories": [
+		"shopping",
+		"lifestyle"
+	]
 }
