@@ -1,0 +1,13 @@
+name: Trigger Provider Data Update
+
+on:
+  workflow_dispatch:
+
+jobs:
+  trigger-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Webhook
+        run: |
+          curl -X POST https://swipegiftcard.fly.dev/api/webhooks/provider-data-updates \
+            -H "Authorization: Bearer ${{ secrets.APP_API_TOKEN }}"
