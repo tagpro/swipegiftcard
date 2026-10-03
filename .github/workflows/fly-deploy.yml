@@ -15,3 +15,8 @@ jobs:
       - run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+  sync-data:
+    name: Sync provider data
+    needs: deploy
+    uses: ./.github/workflows/trigger-data-update.yml
+    secrets: inherit

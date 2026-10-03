@@ -2,6 +2,7 @@ name: Trigger Provider Data Update
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   trigger-update:
@@ -10,4 +11,5 @@ jobs:
       - name: Call Webhook
         run: |
           curl -X POST https://swipegiftcard.fly.dev/api/webhooks/provider-data-updates \
+            --fail-with-body \
             -H "Authorization: Bearer ${{ secrets.APP_API_TOKEN }}"

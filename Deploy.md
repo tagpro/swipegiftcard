@@ -59,6 +59,7 @@ Data sync is now triggered via an API endpoint (`POST /api/webhooks/provider-dat
 
 ### Triggering Sync
 
+-   **Automatic**: The **Fly Deploy** workflow calls the **Trigger Provider Data Update** workflow after every successful deploy, so publishing a release also syncs provider data. The workflow can still be run manually from the Actions tab.
 -   **Manual Trigger (API)**:
     ```bash
     curl -X POST https://your-app-name.fly.dev/api/webhooks/provider-data-updates \
