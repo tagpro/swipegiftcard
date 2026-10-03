@@ -39,6 +39,7 @@ The application is deployed to Fly.io using the workflow defined in `.github/wor
 
 ### Deployment
 - **Automated**: Push to the `main` branch. The **Fly Deploy** action will build and deploy the app.
+- **Release workflow**: Run the **Release** workflow from the Actions tab with a version (e.g. `v0.5.0`). It creates the GitHub release from `main`, deploys, and syncs provider data.
 - **Manual**: Run `fly deploy` locally.
 
 ## 3. Data Synchronization

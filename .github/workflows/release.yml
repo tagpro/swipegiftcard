@@ -1,0 +1,41 @@
+name: Release
+
+# Creates a GitHub release from main, then deploys and syncs provider data.
+# Releases created with GITHUB_TOKEN don't trigger the release-published event,
+# so the deploy is called directly instead of relying on Fly Deploy's trigger.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag to release (e.g. v0.5.0)
+        required: true
+        type: string
+
+jobs:
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must look like v1.2.3, got: $VERSION"
+            exit 1
+          fi
+          gh release create "$VERSION" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --generate-notes
+  deploy:
+    name: Deploy
+    needs: release
+    permissions:
+      contents: read
+    uses: ./.github/workflows/fly-deploy.yml
+    secrets: inherit
