@@ -10,10 +10,22 @@
 
     // For now, let's just list all brands and filter in JS if the DB doesn't support "contains".
     const brandsQuery = useLiveQuery(() => clientDb.tables.brands);
+    const brandCardsQuery = useLiveQuery(() => clientDb.tables.brandCards);
+
+    // Hide brands with no active links (e.g. old names left behind by a rename)
+    let activeBrandNames = $derived(
+        new Set(
+            (brandCardsQuery.data || [])
+                .filter((bc) => !bc.deletedAt)
+                .map((bc) => bc.brandName),
+        ),
+    );
 
     let filteredBrands = $derived(
-        (brandsQuery.data || []).filter((b) =>
-            b.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        (brandsQuery.data || []).filter(
+            (b) =>
+                activeBrandNames.has(b.name) &&
+                b.name.toLowerCase().includes(searchQuery.toLowerCase()),
         ),
     );
 </script>

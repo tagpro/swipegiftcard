@@ -57,6 +57,29 @@
                 }
             }
 
+            // Remove local rows the server no longer has (e.g. renamed brands)
+            status = "Removing Stale Data...";
+            const serverBrands = new Set(data.brands.map((b: any) => b.name));
+            const staleBrands = Array.from(brands.state.keys()).filter(
+                (key) => !serverBrands.has(key),
+            );
+            if (staleBrands.length > 0) await brands.delete(staleBrands);
+
+            const serverCards = new Set(data.cards.map((c: any) => c.name));
+            const staleCards = Array.from(cards.state.keys()).filter(
+                (key) => !serverCards.has(key),
+            );
+            if (staleCards.length > 0) await cards.delete(staleCards);
+
+            const serverBrandCards = new Set(
+                data.brandCards.map((bc: any) => `${bc.brandName}_${bc.cardName}`),
+            );
+            const staleBrandCards = Array.from(brandCards.state.keys()).filter(
+                (key) => !serverBrandCards.has(key),
+            );
+            if (staleBrandCards.length > 0)
+                await brandCards.delete(staleBrandCards);
+
             status = "Sync Complete!";
         } catch (e: any) {
             status = "Error";

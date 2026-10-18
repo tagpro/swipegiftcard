@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { fetchTCNData, fetchUltimateData } from '$lib/sync/fetchers';
 import { syncToDatabase } from '$lib/sync/db-ops';
-import type { SyncData } from '$lib/sync/types';
+import { mergeSyncData } from '$lib/sync/brand-names';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -22,12 +22,8 @@ export const POST: RequestHandler = async ({ request }) => {
             fetchUltimateData()
         ]);
 
-        // 2. Merge Data
-        const mergedData: SyncData = {
-            brands: new Set([...tcnData.brands, ...ultimateData.brands]),
-            cards: new Set([...tcnData.cards, ...ultimateData.cards]),
-            records: [...tcnData.records, ...ultimateData.records]
-        };
+        // 2. Merge Data (reconciles brand names across sources)
+        const mergedData = mergeSyncData(tcnData, ultimateData);
 
         console.log(`Merged Data: ${mergedData.brands.size} brands, ${mergedData.cards.size} cards, ${mergedData.records.length} links.`);
 
