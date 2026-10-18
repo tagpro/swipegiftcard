@@ -110,26 +110,25 @@ export async function fetchUltimateData(): Promise<SyncData> {
     const cards = new Set<string>();
     const records: SyncRecord[] = [];
 
-    const cardMapping: Record<string, string> = {
-        'birthday': 'Birthday',
-        'thank-you': 'Thank You',
-        'celebrate': 'Celebrate',
-        'just-for-you': 'Just For You',
-        'everyone': 'Everyone',
-        'him': 'Him',
-        'her': 'Her',
-        'home': 'Home',
-        'kids': 'Kids',
-        'teens': 'Teens',
-        'students': 'Students',
-        'baby-mum': 'Baby & Mum',
-        'shopping': 'Shopping',
-        'active-wellness': 'Active & Wellness',
-        'eats': 'Eats',
-        'gaming-bites': 'Gaming & Bites',
-        'beauty-spa': 'Beauty & Spa',
-        'thanks': 'Thanks'
-    };
+    // Card types come from the page's "product" filter buttons, e.g.
+    // <button data-filter=".style">Shopping</button>. The "type" filter group
+    // (online, in-store, exchange-card) describes how a brand redeems, not a card.
+    const cardMapping = new Map<string, string>();
+    $('[data-filter-group="product"] button[data-filter^="."]').each((_, element) => {
+        const el = $(element);
+        const cls = el.attr('data-filter')!.slice(1);
+        const label = el.text().replace(/\s+/g, ' ').trim();
+        if (cls && label) {
+            cardMapping.set(cls, label);
+        }
+    });
+
+    // Fail rather than return nothing, so a page redesign can't soft-delete
+    // every Ultimate link during sync.
+    if (cardMapping.size === 0) {
+        throw new Error('Failed to parse Ultimate data: no card types found in product filters');
+    }
+    console.log(`[Ultimate] Found ${cardMapping.size} card types.`);
 
     const items = $('.blockContent_brands--item');
     console.log(`[Ultimate] Found ${items.length} brand items in HTML.`);
@@ -145,8 +144,9 @@ export async function fetchUltimateData(): Promise<SyncData> {
         const classList = classes.split(' ');
 
         for (const cls of classList) {
-            if (cardMapping[cls]) {
-                const cardName = `${cardMapping[cls]} (Ultimate)`;
+            const label = cardMapping.get(cls);
+            if (label) {
+                const cardName = `${label} (Ultimate)`;
                 cards.add(cardName);
                 records.push({
                     brandName: brandName,
@@ -156,6 +156,10 @@ export async function fetchUltimateData(): Promise<SyncData> {
             }
         }
     });
+
+    if (records.length === 0) {
+        throw new Error('Failed to parse Ultimate data: no brand-card links found');
+    }
 
     return { brands, cards, records };
 }
