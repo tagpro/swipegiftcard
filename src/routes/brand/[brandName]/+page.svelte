@@ -12,7 +12,7 @@
     let relatedCards = $derived.by(() => {
         const allBrandCards = brandCardsQuery.data || [];
         const filtered = allBrandCards.filter(
-            (bc) => bc.brandName === brandName,
+            (bc) => bc.brandName === brandName && !bc.deletedAt,
         );
         return filtered.map((bc) => ({
             name: bc.cardName,

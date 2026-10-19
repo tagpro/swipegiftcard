@@ -9,7 +9,9 @@
 
     let relatedBrands = $derived.by(() => {
         const allBrandCards = brandCardsQuery.data || [];
-        const filtered = allBrandCards.filter((bc) => bc.cardName === cardName);
+        const filtered = allBrandCards.filter(
+            (bc) => bc.cardName === cardName && !bc.deletedAt,
+        );
         return filtered.map((bc) => ({
             name: bc.brandName,
             source: bc.source,

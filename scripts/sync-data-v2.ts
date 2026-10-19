@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { fetchTCNData, fetchUltimateData } from '../src/lib/sync/fetchers';
 import { syncToDatabase } from '../src/lib/sync/db-ops';
-import type { SyncData } from '../src/lib/sync/types';
+import { mergeSyncData } from '../src/lib/sync/brand-names';
 
 async function main() {
     try {
@@ -13,12 +13,8 @@ async function main() {
             fetchUltimateData()
         ]);
 
-        // 2. Merge Data
-        const mergedData: SyncData = {
-            brands: new Set([...tcnData.brands, ...ultimateData.brands]),
-            cards: new Set([...tcnData.cards, ...ultimateData.cards]),
-            records: [...tcnData.records, ...ultimateData.records]
-        };
+        // 2. Merge Data (reconciles brand names across sources)
+        const mergedData = mergeSyncData(tcnData, ultimateData);
 
         console.log(`Merged Data: ${mergedData.brands.size} brands, ${mergedData.cards.size} cards, ${mergedData.records.length} links.`);
 

@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as cheerio from 'cheerio';
 import type { SyncData, TCNBrand, TCNResponse, SyncRecord } from './types';
+import { cleanBrandName } from './brand-names';
 
 // Helper to chunk arrays
 function chunkArray<T>(array: T[], size: number): T[][] {
@@ -10,13 +11,6 @@ function chunkArray<T>(array: T[], size: number): T[][] {
         chunked.push(array.slice(i, i + size));
     }
     return chunked;
-}
-
-function toTitleCase(str: string) {
-    return str.replace(
-        /\w\S*/g,
-        (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-    );
 }
 
 export async function fetchTCNData(): Promise<SyncData> {
@@ -60,7 +54,9 @@ export async function fetchTCNData(): Promise<SyncData> {
                     const cardName = `${brand.name} (TCN)`;
                     cards.add(cardName);
 
-                    const retailerNames = data.response.brand.map((r) => toTitleCase(r.brand_name));
+                    const retailerNames = data.response.brand
+                        .map((r) => cleanBrandName(r.brand_name))
+                        .filter((name): name is string => name !== null);
                     console.log(`[TCN] Fetched ${brand.name}: Found ${retailerNames.length} retailers.`);
 
                     for (const retailer of retailerNames) {
@@ -140,7 +136,7 @@ export async function fetchUltimateData(): Promise<SyncData> {
 
     items.each((_, element) => {
         const el = $(element);
-        const brandName = el.attr('data-title');
+        const brandName = cleanBrandName(el.attr('data-title'));
         if (!brandName) return;
 
         brands.add(brandName);

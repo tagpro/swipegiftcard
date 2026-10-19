@@ -19,7 +19,9 @@ vi.mock('../src/lib/db/client', () => ({
         })),
         update: vi.fn(() => ({
             set: vi.fn(() => ({
-                where: vi.fn()
+                where: vi.fn(() => ({
+                    returning: vi.fn()
+                }))
             }))
         })),
         transaction: vi.fn((cb) => cb({
