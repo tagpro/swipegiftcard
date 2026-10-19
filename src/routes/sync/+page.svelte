@@ -5,8 +5,21 @@
     let status = $state("Idle");
     let progress = $state(0);
     let error = $state<string | null>(null);
+    // Blocks both buttons until a sync or reset (including cleanup) finishes
+    let busy = $state(false);
 
     async function sync() {
+        if (busy) return;
+        busy = true;
+        try {
+            await runSync();
+        } finally {
+            busy = false;
+        }
+    }
+
+    // Collection writes return a Transaction; await isPersisted so failures surface
+    async function runSync() {
         status = "Syncing...";
         progress = 0;
         error = null;
@@ -32,7 +45,7 @@
             status = "Syncing Brands...";
             for (const brand of data.brands) {
                 if (!brands.state.has(brand.name)) {
-                    await brands.insert(brand);
+                    await brands.insert(brand).isPersisted.promise;
                 }
             }
 
@@ -40,7 +53,7 @@
             status = "Syncing Cards...";
             for (const card of data.cards) {
                 if (!cards.state.has(card.name)) {
-                    await cards.insert(card);
+                    await cards.insert(card).isPersisted.promise;
                 }
             }
 
@@ -51,9 +64,9 @@
                 if (brandCards.state.has(id)) {
                     await brandCards.update(id, (draft) => {
                         Object.assign(draft, bc);
-                    });
+                    }).isPersisted.promise;
                 } else {
-                    await brandCards.insert({ ...bc, id });
+                    await brandCards.insert({ ...bc, id }).isPersisted.promise;
                 }
             }
 
@@ -63,13 +76,13 @@
             const staleBrands = Array.from(brands.state.keys()).filter(
                 (key) => !serverBrands.has(key),
             );
-            if (staleBrands.length > 0) await brands.delete(staleBrands);
+            if (staleBrands.length > 0) await brands.delete(staleBrands).isPersisted.promise;
 
             const serverCards = new Set(data.cards.map((c: any) => c.name));
             const staleCards = Array.from(cards.state.keys()).filter(
                 (key) => !serverCards.has(key),
             );
-            if (staleCards.length > 0) await cards.delete(staleCards);
+            if (staleCards.length > 0) await cards.delete(staleCards).isPersisted.promise;
 
             const serverBrandCards = new Set(
                 data.brandCards.map((bc: any) => `${bc.brandName}_${bc.cardName}`),
@@ -78,7 +91,7 @@
                 (key) => !serverBrandCards.has(key),
             );
             if (staleBrandCards.length > 0)
-                await brandCards.delete(staleBrandCards);
+                await brandCards.delete(staleBrandCards).isPersisted.promise;
 
             status = "Sync Complete!";
         } catch (e: any) {
@@ -94,6 +107,8 @@
             )
         )
             return;
+        if (busy) return;
+        busy = true;
 
         status = "Resetting...";
         progress = 0;
@@ -107,21 +122,23 @@
 
             // Clear all data
             const brandKeys = Array.from(brands.state.keys());
-            if (brandKeys.length > 0) await brands.delete(brandKeys);
+            if (brandKeys.length > 0) await brands.delete(brandKeys).isPersisted.promise;
 
             const cardKeys = Array.from(cards.state.keys());
-            if (cardKeys.length > 0) await cards.delete(cardKeys);
+            if (cardKeys.length > 0) await cards.delete(cardKeys).isPersisted.promise;
 
             const brandCardKeys = Array.from(brandCards.state.keys());
             if (brandCardKeys.length > 0)
-                await brandCards.delete(brandCardKeys);
+                await brandCards.delete(brandCardKeys).isPersisted.promise;
 
             // Trigger sync
-            await sync();
+            await runSync();
         } catch (e: any) {
             status = "Error Resetting";
             error = e.message;
             console.error(e);
+        } finally {
+            busy = false;
         }
     }
 </script>
@@ -160,7 +177,7 @@
         <button
             onclick={sync}
             class="px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl shadow-md hover:bg-indigo-700 hover:shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={status === "Syncing..." || status === "Resetting..."}
+            disabled={busy}
         >
             {status === "Syncing..." ? "Syncing..." : "Sync Now"}
         </button>
@@ -168,7 +185,7 @@
         <button
             onclick={resetAndSync}
             class="px-6 py-3 bg-rose-600 text-white font-semibold rounded-xl shadow-md hover:bg-rose-700 hover:shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={status === "Syncing..." || status === "Resetting..."}
+            disabled={busy}
         >
             {status === "Resetting..." ? "Resetting..." : "Reset & Sync"}
         </button>
